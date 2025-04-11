@@ -1,0 +1,9 @@
+# Regresja
+
+## Wprowadzenie
+
+## Regresja liniowa
+
+## Regresja wieloraka
+
+## XAI

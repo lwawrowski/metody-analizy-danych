@@ -1,0 +1,10 @@
+# Testy statystyczne
+
+## Wprowadzenie
+
+## Hipoteza statystyczna
+
+## Testy parametryczne
+
+## Testy nieparametryczna
+

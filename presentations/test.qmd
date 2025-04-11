@@ -1,0 +1,28 @@
+---
+title: "test"
+format: revealjs
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished presentation. To learn more about Quarto presentations see <https://quarto.org/docs/presentations/>.
+
+## Bullets
+
+When you click the **Render** button a document will be generated that includes:
+
+-   Content authored with markdown
+-   Output from executable code
+
+## Q&A
+
+<iframe src="https://embed.polleverywhere.com/multiple_choice_polls/Z4doDAvah795oiwQzt7FH?controls=none&short_poll=true" width="800px" height="600px"></iframe>
+
+## Code
+
+When you click the **Render** button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```

@@ -1,0 +1,13 @@
+# Dane
+
+[Prezentacja](presentations/01_dane.html)
+
+## Wprowadzenie
+
+## Braki danych
+
+## Wartości odstające
+
+## Duplikaty
+
+## Podział

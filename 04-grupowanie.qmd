@@ -1,0 +1,17 @@
+# Grupowanie
+
+## Wprowadzenie
+
+## Grupowanie obiektów
+
+### Metoda k-średnich
+
+### Metoda hierarchiczna
+
+### Wykrywanie anomalii
+
+## Grupowanie cech
+
+### Metoda głównych składowych
+
+### UMAP

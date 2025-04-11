@@ -1,0 +1,16 @@
+# Wprowadzenie {.unnumbered}
+
+Literatura podstawowa:
+
+- [Wprowadzenie do modelowania predycyjnego](https://betaandbit.github.io/MiniML/)
+- [Hands-On Machine Learning with R](https://bradleyboehmke.github.io/HOML/)
+
+Literatura dodatkowa:
+
+- [R for Data Science](http://r4ds.had.co.nz/)
+- [Introduction to Data Science](https://ubc-dsci.github.io/introduction-to-datascience/)
+- [Applied Statistics with R](https://daviddalpiaz.github.io/appliedstats/)
+- [Data Science Live Book](https://livebook.datascienceheroes.com/)
+- [Tidy Modeling with R](https://www.tmwr.org/)
+
+**[Skrypty z zajęć](https://github.com/lwawrowski/cdv_bigdata)**

@@ -1,5 +1,7 @@
 # Klasyfikacja
 
+[Prezentacja](presentations/02_klasyfikacja.html)
+
 ## Wprowadzenie
 
 ## Drzewo decyzyjne

@@ -19,5 +19,3 @@ format:
   html:
     theme: cosmo
     toc-title: "Spis treści"
-  pdf:
-    documentclass: scrreprt

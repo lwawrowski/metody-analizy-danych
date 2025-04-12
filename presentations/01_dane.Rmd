@@ -19,19 +19,20 @@ library(tidyverse)
 library(countdown)
 ```
 
-# Zbiór danych - [pracownicy](http://www.wawrowski.edu.pl/data/pracownicy.xlsx)
+# Zbiór danych
 
-- id - kod pracownika
-- plec - płeć pracownika (0 - mężczyzna, 1 - kobieta)
-- data_urodz - data urodzenia
-- edukacja - wykształcenie (w latach nauki)
-- kat_pracownika - grupa pracownicza (1 - specjalista, 2 - menedżer, 3 - konsultant)
-- bwynagrodzenie - bieżące wynagrodzenie
-- pwynagrodzenie - początkowe wynagrodzenie
-- staz - staż pracy (w miesiącach)
-- doswiadczenie - poprzednie zatrudnienie (w miesiącach)
-- zwiazki - przynależność do związków zawodowych (0 - nie, 1 - tak)
-- wiek - wiek (w latach)
+[German credit data](http://www.wawrowski.edu.pl/data/german_credit_data.csv)
+
+1.  Age (numeric)
+2.  Sex (text: male, female)
+3.  Job (numeric: 0 - unskilled and non-resident, 1 - unskilled and resident, 2 - skilled, 3 - highly skilled)
+4.  Housing (text: own, rent, or free)
+5.  Saving accounts (text - little, moderate, quite rich, rich)
+6.  Checking account (text, little, moderate, rich)
+7.  Credit amount (numeric, in DM)
+8.  Duration (numeric, in month)
+9.  Purpose (text: car, furniture/equipment, radio/TV, domestic appliances.. and so on...)
+10.  Risk (text: good/bad): it's our Target Variable, describes if client paid or didn't pay loan
 
 ---
 
@@ -45,6 +46,8 @@ Dane surowe (raw data) bez odpowiedniego przygotowania nie będą się nadawać 
 ---
 
 # Czyszczenie danych
+
+- czyszczenie nazw kolumn
 
 - usuwanie lub uzupełnianie braków danych
 
@@ -65,6 +68,33 @@ Dane surowe (raw data) bez odpowiedniego przygotowania nie będą się nadawać 
 - normalizacja wartości numerycznych
 
 - tworzenie nowych cech (feature engineering)
+
+- podział zbioru
+
+---
+
+# Czyszczenie nazw kolumn
+
+Natywny python
+
+```python
+df.columns = (
+    df.columns
+    .str.strip()  # usuń spacje
+    .str.lower()  # małe litery
+    .str.replace(' ', '_')  # spacje na podkreślniki
+    .str.replace(r'[^\w]', '', regex=True)  # usuwanie znaków specjalnych
+)
+
+```
+
+Pakiet [pyjanitor](https://github.com/pyjanitor-devs/pyjanitor/tree/dev)
+
+```python 
+from janitor import clean_names
+
+df = df.clean_names()
+```
 
 ---
 
@@ -94,107 +124,219 @@ Możliwe rozwiązania
 
 class: inverse
 
-# Jaka statystyka najlepiej uzupełni braki w przypadku cechy numerycznej?
+`r countdown(minutes = 2, seconds = 0, top = 0)`
+
+# `r fontawesome::fa("circle-question")` Pytanie do słuchaczy
+
+Jaka statystyka najlepiej uzupełni braki w przypadku cechy numerycznej?
 
 https://pollev.com/lukaszw470
 
 ---
 
-# Moduł impute 
-
-https://scikit-learn.org/stable/modules/impute.html
-
-Wybrane algorytmy radzą się z obecnością braków danych.
-
----
-
 # Zastępowanie wybraną wartością
 
-Funkcja `replace_na()` zastępuje `NA` wskazaną wartością.
+Funkcja `fillna()` zastępuje braki danych wskazaną wartością.
 
-```{r}
-df <- tibble(x = c(1, 2, NA), y = c("a", NA, "b"))
-df %>% 
-  replace_na(list(x = 0, y = "unknown"))
+```python
+df['num_var'] = df['num_var'].fillna(df['num_var'].median()[0])
+df['cat_var'] = df['cat_var'].fillna(df['cat_var'].mode()[0])
 ```
 
-```{r}
-df %>% 
-  mutate(x = replace_na(x, mean(x, na.rm = T)))
+---
+
+# `scikit-learn` - biblioteka do ML
+
+Jeden z najważniejszych pakietów w Pythonie dla analizy i modelowania danych
+
+- preprocessing danych (skalowanie, kodowanie, imputacja)
+
+- podział na zbiór treningowy/testowy
+
+- modele klasyfikacji, regresji, klasteryzacji
+
+- walidacja krzyżowa i metryki oceny modelu
+
+Dokumentacja: https://scikit-learn.org/
+
+---
+
+# Moduł `sklearn.impute`
+
+- `SimpleImputer`: proste strategie: średnia, mediana, najczęstsza wartość
+
+- `KNNImputer`: imputacja na podstawie najbliższych sąsiadów
+
+- `IterativeImputer`: zaawansowana iteracyjna imputacja (np. z regresją)
+
+- `MissingIndicator`: dodaje kolumny informujące o brakach
+
+Wybrane algorytmy ML radzą się z obecnością braków danych.
+
+Dokumentacja: https://scikit-learn.org/stable/modules/impute.html
+
+---
+
+# `SimpleImputer`
+
+Prosta imputacja medianą
+
+```python
+from sklearn.impute import SimpleImputer
+
+imputer = SimpleImputer(strategy='median')
+df[['num_var']] = imputer.fit_transform(df[['num_var']])
+
 ```
+
+---
+
+# `KNNImputer`
+
+Uzupełnia brakujące dane na podstawie podobieństwa do innych rekordów. Dla każdej brakującej obserwacji: znajduje K najbliższych sąsiadów i wstawia średnią (ważoną) z tych wartości.
+
+```python
+from sklearn.impute import KNNImputer
+
+knn_imputer = KNNImputer(n_neighbors=5)
+df[['num_var']] = knn_imputer.fit_transform(df[['num_var']])
+```
+
+---
+
+class: inverse
+
+`r countdown(minutes = 5, seconds = 0, top = 0)`
+
+# `r fontawesome::fa("circle-question")` Zadanie dla słuchaczy
+
+Porównaj rozkład cechy `checking_account` z wykorzystaniem obu przedstawionych metod.
+
+---
+
+# Wartości odstające
+
+Wykres pudełkowy i metoda  IQR (interquartile range)
+
+```python
+Q1 = df['num_var'].quantile(0.25)
+Q3 = df['num_var'].quantile(0.75)
+IQR = Q3 - Q1
+
+# Granice
+dolna = Q1 - 1.5 * IQR
+górna = Q3 + 1.5 * IQR
+
+# Usunięcie outlierów
+df_clean = df[(df['num_var'] >= dolna) & (df['num_var'] <= górna)]
+
+```
+
+---
+
+# Usuwanie duplikatów 
+
+Funkcja `drop_dupliacates()` usuwa duplikaty ze zbioru danych.
+
+W argumencie subset można podać kolumny, które mają być brane pod uwagę w analizie duplikatów. Domyślnie uwzględniane są wszystkie kolumny.
 
 
 ---
 
-# Pakiet VIM
+# Kodowanie zmiennych kategorycznych
 
-[Visualization and Imputation of Missing Values](https://cran.r-project.org/web/packages/VIM/index.html)
+One-Hot Encoding: zamiana wartości kategorycznych na kolumny binarne.
 
-[Alexander Kowarik, Matthias Templ (2016). Imputation with the R Package VIM. Journal of Statistical Software, 74(7), 1-16.](https://www.jstatsoft.org/article/view/v074i07/v74i07.pdf)
+- tworzy nową kolumnę dla każdej unikalnej wartości w zmiennej kategorycznej
 
-- implementuje najpopularniejsze metody do zastępowania braków danych,
+- wartość 1 oznacza obecność danej kategorii, 0 – jej brak
 
-- funkcje z pakietu zwracają zbiór danych z uzupełnionymi wartościami i flagą dla imputowanych obserwacji
+```python
+df = pd.DataFrame({'płeć': ['kobieta', 'mężczyzna', 'kobieta']})
+df_encoded = pd.get_dummies(df, columns=['płeć'])
+```
+
+```bash
+   płeć_kobieta  płeć_mężczyzna
+0             1               0
+1             0               1
+2             1               0
+```
+
+W module sklearn.preprocessing jest `OneHotEncoder`.
 
 ---
 
-# Metoda hot-deck
+# Normalizacja cech
 
-Dla każdego braku danych poszukiwany jest _dawca_ - obserwacja podobna pod kątem cech skorelowanych ze zmienną (pomocniczych), która zawiera brak danych. 
+Modele oparte na odległościach (np. KNN, SVM) są wrażliwe na skalę cech. Zastosowanie normalizacji sprawia, że wszystkie cechy mają porównywalną skalę oraz przyspiesza i poprawia jakość uczenia modeli.
 
-Funkcja `hotdeck`
+- StandardScaler: przekształca cechy do rozkładu o średniej = 0 i odchyleniu standardowym = 1
 
-```{r eval=FALSE}
-hotdeck(data = zbior, variable = "cecha", 
-        ord_var = c("zmienna1", "zmienna2"), domain_var = "domena")
+- MinMaxScaler: skaluje wartości do zakresu [0, 1]
+
+```python
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 ```
-
-- `data` - zbiór danych wejściowych
-
-- `variable` - cecha/cechy do imputacji
-
-- `ord_var` - zmienne pomocnicze
-
-- `domain_var` - zmienne domenowe - w ramach, których ma być przeprowadzona imputacja
 
 ---
 
-# Metoda najbliższych sąsiadów
+# Feature Engineering
 
-Poszukiwanie obserwacji dawcy na podstawie wybranych zmiennych oraz kryterium minimalnej odległości dla wybranej liczby $k$ sąsiadów. Obliczanie odległości opiera się na metryce Gowera (1971), która umożliwia obliczanie odległości dla cech jakościowych i ilościowych. Imputowana wartość dla cech ilościowych to mediana z wartości $k$ sąsiadów, a dla cech jakościowych najczęściej występujący wariant.
+Proces modyfikowania, przekształcania lub tworzenia nowych zmiennych (cech), które lepiej opisują dane i ułatwiają modelowi naukę.
 
-Funkcja `kNN`
+Przykłady:
 
-```{r eval=FALSE}
-kNN(data = zbior, variable = c("cecha1", "cecha2"), 
-    dist_var = c("zmienna1", "zmienna2", "zmienna3"), k = 5)
-```
+- Ekstrakcja informacji np. z dat: rok, miesiąc, dzień tygodnia
 
-- `data` - zbiór danych wejściowych
+- Grupowanie wartości np. przedziały wiekowe (18–25, 26–40, itd.)
 
-- `variable` - cecha/cechy do imputacji
+- Tworzenie nowych cech np. BMI = waga / wzrost$^2$
 
-- `dist_var` - zmienne wykorzystywane do obliczenia odległości
+- Agregacje np. średni dochód na klienta
 
-- `k` - liczba sąsiadów
+- Transformacje np. logarytmy, standaryzacja
 
 ---
 
-# Imputacja regresyjna
+class: inverse
 
-Zastąpienie braków danych wartościami teoretycznymi z modelu liniowego.
+`r countdown(minutes = 5, seconds = 0, top = 0)`
 
-Funkcja `regressionImp`
+# `r fontawesome::fa("circle-question")` Pytanie do słuchaczy
 
-```{r eval=FALSE}
-regressionImp(formula = model, data = zbior)
+Jakie nowe cechy można zaproponować dla zbioru credit?
+
+https://pollev.com/lukaszw470
+
+---
+
+# Podział danych
+
+- dane uczące (treningowe) - zbiór przykładów używanych do dopasowania parametrów algorytmu
+
+- dane testowe - niezależny od danych uczących zbiór przykładów o takim samym rozkładzie jak dane uczące
+
+- dane walidacyjne - zbiór przykładów używanych do dopasowania hiperparametrów 
+
+Często nazewnictwo danych testowych i walidacyjnych jest mylone.
+
+[Wikipedia](https://en.wikipedia.org/wiki/Training%2C_validation%2C_and_test_sets)
+
+---
+
+# Podział zbioru na treningowy i testowy
+
+```python
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
 ```
-
-- `formula` - model dla zmiennej imputowanej
-
-- `data` - zbiór danych wejściowych
-
-Podobnie działa funkcja `rangerImpute()` wykorzystująca lasy losowe, natomiast przy domyślnych parametrach nie będzie metodą deterministyczną.
 
 ---
 

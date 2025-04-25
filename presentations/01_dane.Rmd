@@ -36,6 +36,34 @@ library(countdown)
 
 ---
 
+## Zmienna objaśniana vs. zmienne objaśniające
+
+.pull-left[
+
+**Zmienna objaśniana**/zależna/decyzyjna (ang. dependent variable, target, ground truth, y) np. czy klient spłaci kredyt, jaka jest cena mieszkania.
+
+- To wynik, który chcemy przewidzieć lub wyjaśnić.
+
+- Zależy od innych zmiennych. 
+
+]
+
+.pull-right[
+
+**Zmienne objaśniające**/niezależne/warunkowe (ang. independent variables, features, X) np. wiek, dochód, liczba dzieci.
+
+- To czynniki, które wpływają na zmienną objaśnianą.
+
+- Cechy wejściowe modelu.
+
+]
+
+--
+
+$$y = f(X)$$
+
+---
+
 # Dane 
 
 Dane surowe (raw data) bez odpowiedniego przygotowania nie będą się nadawać do zastosowania w uczeniu maszynowym. 
@@ -177,6 +205,28 @@ Dokumentacja: https://scikit-learn.org/stable/modules/impute.html
 
 ---
 
+# Fit i transform
+
+Kluczowe metody w preprocessingu z wykorzystaniem pakietu `scikit-learn`
+
+- `fit()` - analizuje dane wejściowe i zapamiętuje parametry przekształcenia
+
+- `transform()` - wykorzystuje zapamiętane parametry z `fit()` i przekształca dane
+
+- `fit_transform()` - wygodne połączenie `fit()` + `transform()` często stosowane na zbiorze treningowym
+
+Nigdy nie używamy `fit()` na danych testowych, wyłącznie `transform()`.
+
+```python
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)  # tylko transform!
+```
+
+---
+
 # `SimpleImputer`
 
 Prosta imputacja medianą
@@ -232,6 +282,8 @@ df_clean = df[(df['num_var'] >= dolna) & (df['num_var'] <= górna)]
 
 ```
 
+Usunięcie 1% lub 5% największych i najmniejszych wartości.
+
 ---
 
 # Usuwanie duplikatów 
@@ -240,6 +292,35 @@ Funkcja `drop_dupliacates()` usuwa duplikaty ze zbioru danych.
 
 W argumencie subset można podać kolumny, które mają być brane pod uwagę w analizie duplikatów. Domyślnie uwzględniane są wszystkie kolumny.
 
+---
+
+# Feature Engineering
+
+Proces modyfikowania, przekształcania lub tworzenia nowych zmiennych (cech), które lepiej opisują dane i ułatwiają modelowi naukę.
+
+Przykłady:
+
+- Ekstrakcja informacji np. z dat: rok, miesiąc, dzień tygodnia
+
+- Grupowanie wartości np. przedziały wiekowe (18–25, 26–40, itd.)
+
+- Tworzenie nowych cech np. BMI = waga / wzrost$^2$
+
+- Agregacje np. średni dochód na klienta
+
+- Transformacje np. logarytmy, standaryzacja
+
+---
+
+class: inverse
+
+`r countdown(minutes = 5, seconds = 0, top = 0)`
+
+# `r fontawesome::fa("circle-question")` Pytanie do słuchaczy
+
+Jakie nowe cechy można zaproponować dla zbioru credit?
+
+https://pollev.com/lukaszw470
 
 ---
 
@@ -284,33 +365,19 @@ X_scaled = scaler.fit_transform(X)
 
 ---
 
-# Feature Engineering
+# Kodowanie etykiet
 
-Proces modyfikowania, przekształcania lub tworzenia nowych zmiennych (cech), które lepiej opisują dane i ułatwiają modelowi naukę.
+Interfejs modeli pakietu `scikit-learn` wymaga zakodowania zmiennej decyzyjnej jako wartości liczbowych. 
 
-Przykłady:
+`LabelEncoder` przekształca napisy/kategorie w liczby całkowite i każdej unikalnej wartości przypisuje unikalny numer.
 
-- Ekstrakcja informacji np. z dat: rok, miesiąc, dzień tygodnia
+```python
+from sklearn.preprocessing import LabelEncoder
 
-- Grupowanie wartości np. przedziały wiekowe (18–25, 26–40, itd.)
-
-- Tworzenie nowych cech np. BMI = waga / wzrost$^2$
-
-- Agregacje np. średni dochód na klienta
-
-- Transformacje np. logarytmy, standaryzacja
-
----
-
-class: inverse
-
-`r countdown(minutes = 5, seconds = 0, top = 0)`
-
-# `r fontawesome::fa("circle-question")` Pytanie do słuchaczy
-
-Jakie nowe cechy można zaproponować dla zbioru credit?
-
-https://pollev.com/lukaszw470
+le = LabelEncoder()
+y = ['dobry', 'zły', 'dobry', 'dobry', 'zły']
+y_encoded = le.fit_transform(y)
+```
 
 ---
 

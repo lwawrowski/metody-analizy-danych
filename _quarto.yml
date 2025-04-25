@@ -8,6 +8,7 @@ book:
   favicon: favicon.png
   chapters:
     - index.qmd
+    - 00-instalacja.qmd
     - 01-dane.qmd
     - 02-klasyfikacja.qmd
     - 03-regresja.qmd

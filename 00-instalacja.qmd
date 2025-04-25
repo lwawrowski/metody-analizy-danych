@@ -1,0 +1,100 @@
+# Instalacja 
+
+Jeden ze sposobów instalacji Pythona na Windowsie to pobranie instalatora z oficjalnej strony [https://www.python.org/downloads/windows/](https://www.python.org/downloads/windows/)
+
+Ważne, żeby podczas instalacji zaznaczyć następujące opcje:
+
+- *Add Python to PATH* (żeby mieć Pythona dostępnego w konsoli)
+
+- Potem w *Customize installation* warto zaznaczyć:
+   - pip
+   - tcl/tk (GUI apps)
+   - IDLE
+   - py launcher
+   - instalacja dla wszystkich użytkowników (jeśli ustawienia komputera na to pozwalają)
+
+Kolejny krok to weryfikacja instalacji w konsoli (cmd/powershell):
+
+```bash
+python --version
+pip --version
+```
+
+## Środowiska wirtualne
+
+Środowisko wirtualne (ang. virtual environment, w skrócie venv) to jedna z rzeczy w Pythonie, która ułatwia zarządzanie projektami. To izolowane środowisko Pythona stworzone tylko dla jednego projektu. Zawiera swoją własną wersję interpretera Pythona i niezależny zestaw zainstalowanych pakietów. Korzystając ze środowiska wirtualnego każdy projekt może mieć inne wersje bibliotek.
+
+
+Tworzenie wirtualnego środowiska o nazwie `venv` w katalogu projektu.
+
+```bash
+python -m venv venv
+```
+
+Aktywacja środowiska wirtualnego.
+
+```bash
+venv\Scripts\activate
+```
+
+W systemie Windows zdarza się, że jest zablokowane wywoływanie skryptów. Wtedy podczas tworzenia środowiska możemy dostać komunikat 
+
+```
+.\venv\Scripts\activate : File \venv\Scripts\Activate.ps1 cannot be loaded because running scripts is disabled on this system. For more information, see about_Execution_Policies at https:/go.microsoft.com/fwlink/?LinkID=135170.
+```
+
+W takiej sytuacji należy uruchomić poniższą komendę:
+
+
+```bash
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+i spróbować ponownie stworzyć środowisko wirtualne.
+
+
+## Instalacja pakietów
+
+Do instalacji pakietów wykorzystuje się aplikację `pip`. Po stworzeniu i aktywacji środowiska możemy sprawdzić jakie pakiety są zainstalowane:
+
+```bash
+pip list
+```
+
+A następnie zainstalować te, które wymagane są w naszym projekcie.
+
+```bash
+pip install pandas scikit-learn
+```
+
+Dobrą praktyką jest zapisywanie wykorzystywanych pakietów do pliku, dzięki czemu inna osoba może sprawdzić jakie wersje pakietów są wymagane do prawidłowego działania programu.
+
+```bash
+pip freeze > requirements.txt
+```
+
+W ten sposób łatwo też zainstalować wymagane pakiety przy migracji projektu.
+
+```bash
+pip install -r requirements.txt
+```
+
+## Anaconda
+
+Anaconda dostarcza zestaw narzędzi + python + jupyter + numpy + pandas itp. w pakiecie: [https://www.anaconda.com/download](https://www.anaconda.com/download)
+
+Po instalacji anacondy dostajemy interfejs GUI do zarządzania pakietami i środowiskami wirtualnymi. Środowiska wirtualne w anacondzie są tworzone z reguły poza katalogiem projektu.
+
+## IDE
+
+Do wygodnego korzystania z pythona przyda się odpowiednie zintegrowane środowisko programistyczne:
+
+- [Visual Studio Code](https://code.visualstudio.com/) - obecnie najpopularniejsze
+
+- [PyCharm](https://www.jetbrains.com/pycharm/) - świetny w wersji płatnej
+
+- [Jupyter](https://jupyter.org/install) - notatnik pythonowy
+
+- [Google Colab](https://colab.research.google.com/) - wersja online
+
+- [RStudio](https://posit.co/download/rstudio-desktop/)

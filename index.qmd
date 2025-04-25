@@ -1,16 +1,9 @@
-# Wprowadzenie {.unnumbered}
+# Polecana literatura {.unnumbered}
 
-Literatura podstawowa:
+[Wprowadzenie do modelowania predycyjnego](https://betaandbit.github.io/MiniML/) - bardzo przyjemne w odbiorze wprowadzenie w języku polskim przedstawiające proces budowania modelu.
 
-- [Wprowadzenie do modelowania predycyjnego](https://betaandbit.github.io/MiniML/)
-- [Hands-On Machine Learning with R](https://bradleyboehmke.github.io/HOML/)
+[An Introduction to Statistical Learning](https://www.statlearning.com/) - kultowa książka stworzona w wersji zarówno dla języka R, jak i Python. Solidna część teoretyczna
 
-Literatura dodatkowa:
+[Data Science - A First Introduction with Python](https://python.datasciencebook.ca/index.html) - aktualne wprowadzenie w wybrane zagadnienia poparte praktycznymi przykładami. Jest także wersja dla języka [R](https://datasciencebook.ca/)
 
-- [R for Data Science](http://r4ds.had.co.nz/)
-- [Introduction to Data Science](https://ubc-dsci.github.io/introduction-to-datascience/)
-- [Applied Statistics with R](https://daviddalpiaz.github.io/appliedstats/)
-- [Data Science Live Book](https://livebook.datascienceheroes.com/)
-- [Tidy Modeling with R](https://www.tmwr.org/)
-
-**[Skrypty z zajęć](https://github.com/lwawrowski/cdv_bigdata)**
+Wykonane podczas zajęć kody znajdują się w repozytorium [github](https://github.com/lwawrowski/cdv_bigdata).

@@ -50,7 +50,7 @@ W takiej sytuacji należy uruchomić poniższą komendę:
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 ```
 
-i spróbować ponownie stworzyć środowisko wirtualne.
+i spróbować ponownie uruchomić środowisko wirtualne.
 
 
 ## Instalacja pakietów

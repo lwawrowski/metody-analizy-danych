@@ -288,7 +288,7 @@ Usunięcie 1% lub 5% największych i najmniejszych wartości.
 
 # Usuwanie duplikatów 
 
-Funkcja `drop_dupliacates()` usuwa duplikaty ze zbioru danych.
+Funkcja `drop_duplicates()` usuwa duplikaty ze zbioru danych.
 
 W argumencie subset można podać kolumny, które mają być brane pod uwagę w analizie duplikatów. Domyślnie uwzględniane są wszystkie kolumny.
 

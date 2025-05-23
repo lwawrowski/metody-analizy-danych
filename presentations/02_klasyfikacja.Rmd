@@ -235,18 +235,27 @@ Można przeszukiwać całą przestrzeń parametrów (intensywne obliczeniowo) al
 
 ---
 
+class: inverse
+
+# Zadanie
+
+`r countdown(minutes = 10, seconds = 0, top = 0)`
+
+Przeprowadź tuning parametrów dla modelu lasu losowego.
+
+---
+
 # Objaśnianie modelu
+
+[Explanatory Model Analysis](https://pbiecek.github.io/ema/)
+
+[Interpretable Machine Learning](https://christophm.github.io/interpretable-ml-book/)
 
 - Ważność cech - jak bardzo model wykorzystuje daną cechę do predykcji.
 
 - Partial dependency plots - jak zmienia się prawdopodobieństwo klasyfikacji w zależności od predyktora.
 
 - SHAP - oblicza udział każdej cechy w predykcji. 
-
-
-[Explanatory Model Analysis](https://pbiecek.github.io/ema/)
-
-[Interpretable Machine Learning](https://christophm.github.io/interpretable-ml-book/)
 
 ---
 

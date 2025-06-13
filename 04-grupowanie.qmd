@@ -1,5 +1,7 @@
 # Grupowanie
 
+[Prezentacja](presentations/04_grupowanie.html)
+
 ## Wprowadzenie
 
 ## Grupowanie obiektów

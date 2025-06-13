@@ -1,5 +1,7 @@
 # Testy statystyczne
 
+[Prezentacja](presentations/05_testy.html)
+
 ## Wprowadzenie
 
 ## Hipoteza statystyczna

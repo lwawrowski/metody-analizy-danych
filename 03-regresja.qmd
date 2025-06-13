@@ -1,5 +1,7 @@
 # Regresja
 
+[Prezentacja](presentations/03_regresja.html)
+
 ## Wprowadzenie
 
 ## Regresja liniowa

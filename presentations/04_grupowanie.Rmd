@@ -43,39 +43,6 @@ Uczenie nienadzorowane - końcowy wynik nie jest znany
 
 ---
 
-# Grupowanie
-
-Metoda iteracyjna - k-średnich:
-
-```python
-from sklearn.cluster import KMeans
-kmeans = KMeans(n_clusters=5, init="k-means++")
-clusters_kmeans = kmeans.fit_predict(z)
-```
-
-Metoda hierarchiczna:
-
-```python
-from sklearn.cluster import AgglomerativeClustering
-hier = AgglomerativeClustering(n_clusters=5, linkage="ward")
-clusters_hier = hier.fit_predict(z)
-```
-
-
----
-
-# Wybór liczby grup
-
-**Metoda łokcia (wykres osypiska)**
-
-Szukamy tzw. „łokcia” na wykresie inercji, czyli miejsca, gdzie dalsze zwiększanie liczby klastrów nie powoduje już dużego spadku błędu.
-
-**Indeks Calińskiego-Harabasza**
-
-Im większa wartość tego indeksu, tym lepsze (bardziej zwarte i rozdzielne) klastry. Najwyższy pik sugeruje najlepszą liczbę klastrów.
-
----
-
 # Idea
 
 Liczenie odległości pomiędzy analizowanymi obiektami.
@@ -167,6 +134,31 @@ Segmentacja [klientów sklepu](http://www.wawrowski.edu.pl/data/klienci.csv) w o
 
 ---
 
+# Implementacja
+
+Metoda iteracyjna - k-średnich:
+
+```python
+from sklearn.cluster import KMeans
+kmeans = KMeans(n_clusters=5, init="k-means++")
+clusters_kmeans = kmeans.fit_predict(z)
+```
+
+---
+
+# Wybór liczby grup
+
+**Metoda łokcia (wykres osypiska)**
+
+Szukamy tzw. „łokcia” na wykresie inercji, czyli miejsca, gdzie dalsze zwiększanie liczby klastrów nie powoduje już dużego spadku błędu.
+
+**Indeks Calińskiego-Harabasza**
+
+Im większa wartość tego indeksu, tym lepsze (bardziej zwarte i rozdzielne) klastry. Najwyższy pik sugeruje najlepszą liczbę klastrów.
+
+
+---
+
 class: inverse
 
 # Zadanie
@@ -197,6 +189,18 @@ Dokonaj grupowania danych dotyczących [32 samochodów](http://www.wawrowski.edu
 | Complete | Najdalsze punkty  | Zwarte klastry                      | Może zniekształcać duże klastry    |
 | Average  | Średnia odległość | Dobry kompromis                     | Koszt obliczeniowy                 |
 | Ward     | Wzrost wariancji  | Zwarte, równoliczne klastry         | Źle radzi sobie z nieregularnymi   |
+
+---
+
+# Implementacja
+
+Metoda hierarchiczna:
+
+```python
+from sklearn.cluster import AgglomerativeClustering
+hier = AgglomerativeClustering(n_clusters=5, linkage="ward")
+clusters_hier = hier.fit_predict(z)
+```
 
 ---
 

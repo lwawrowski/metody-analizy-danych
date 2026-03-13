@@ -4,17 +4,15 @@ project:
 book:
   title: "Metody przetwarzania i analizy danych"
   author: "Łukasz Wawrowski"
-  date: "04/12/2025"
+  date: "13/03/2026"
   favicon: favicon.png
   chapters:
     - index.qmd
-    - 00-instalacja.qmd
-    - 01-dane.qmd
-    - 02-klasyfikacja.qmd
-    - 03-regresja.qmd
-    - 04-grupowanie.qmd
-    - 05-testy.qmd
-    - 06-raporty.qmd
+    - instalacja.qmd
+    - dane.qmd
+    - regresja.qmd
+    - klasyfikacja.qmd
+    - grupowanie.qmd
 
 format:
   html:

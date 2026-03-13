@@ -1,0 +1,178 @@
+# Dane
+
+[Prezentacja](presentations/01_dane.html)
+
+## Wprowadzenie
+
+Dane surowe rzadko nadają się bezpośrednio do analizy lub modelowania. W praktyce zawierają niespójne nazwy kolumn, brakujące wartości, duplikaty lub kategorie zapisane w różny sposób. Proces przygotowania danych jest często najbardziej czasochłonną częścią projektu analitycznego.
+
+Dobrą praktyką jest rozpoczęcie analizy od eksploracji danych: sprawdzenia typów kolumn, liczby braków danych oraz podstawowych statystyk opisowych. W Pythonie najczęściej wykorzystuje się do tego metody `head()`, `info()` oraz `describe()`.
+
+W tym rozdziale skupimy się na zbiorze opisującym klientów banku i decyzję kredytową - [German credit data](http://www.wawrowski.edu.pl/data/german_credit_data.csv), który zawiera następujące kolumny:
+
+1.  Age (numeric)
+2.  Sex (text: male, female)
+3.  Job (numeric: 0 - unskilled and non-resident, 1 - unskilled and resident, 2 - skilled, 3 - highly skilled)
+4.  Housing (text: own, rent, or free)
+5.  Saving accounts (text - little, moderate, quite rich, rich)
+6.  Checking account (text, little, moderate, rich)
+7.  Credit amount (numeric, in DM)
+8.  Duration (numeric, in month)
+9.  Purpose (text: car, furniture/equipment, radio/TV, domestic appliances.. and so on...)
+10.  Risk (text: good/bad): it's our Target Variable, describes if client paid or didn't pay loan
+
+W analizie danych oraz w uczeniu maszynowym rozróżnia się zmienną objaśnianą (target) oraz zmienne objaśniające (cechy). Zmienna objaśniana reprezentuje wynik, który model ma przewidywać, natomiast zmienne objaśniające dostarczają informacji wejściowych opisujących obserwacje. W przypadku zbioru German Credit Data zmienną objaśnianą jest `risk`, czyli informacja o tym, czy klient spłacił kredyt, natomiast pozostałe kolumny opisują cechy klienta i jego kredytu.
+
+W praktyce bardzo ważne jest, aby upewnić się, że zmienna objaśniana nie jest przypadkowo wykorzystywana podczas przygotowania cech (tzw. **data leakage**). Przed rozpoczęciem modelowania warto także sprawdzić rozkład zmiennej docelowej, ponieważ duża nierównowaga klas może wymagać zastosowania dodatkowych technik, takich jak ważenie klas lub resampling.
+
+Czyszczenie danych obejmuje usuwanie błędów i niespójności w zbiorze danych. Typowe operacje to ujednolicanie nazw kolumn, obsługa braków danych, identyfikacja wartości odstających oraz usuwanie duplikatów. Dzięki temu dane stają się spójne i gotowe do dalszego przetwarzania. Warto zapisywać kolejne kroki czyszczenia danych w postaci kodu, a nie wykonywać je ręcznie w arkuszach kalkulacyjnych. Pozwala to na odtworzenie całego procesu w przyszłości oraz ułatwia jego automatyzację.
+
+Po oczyszczeniu danych następuje etap ich przetwarzania, czyli przygotowania do wykorzystania w modelach statystycznych lub uczenia maszynowego. Obejmuje on m.in. konwersję typów danych, kodowanie zmiennych kategorycznych oraz skalowanie zmiennych numerycznych. Warto pamiętać, że wiele algorytmów wymaga danych w postaci numerycznej, dlatego zmienne tekstowe muszą zostać odpowiednio zakodowane. Dodatkowo właściwe przygotowanie danych często poprawia stabilność i skuteczność modeli.
+
+## Wczytanie danych i wstępna eksploracja
+
+Na początku notebooka dane zostały wczytane do obiektu DataFrame przy użyciu funkcji `read_csv()`. Następnie metoda `head()` pozwala wyświetlić kilka pierwszych rekordów i sprawdzić, czy dane zostały poprawnie załadowane.
+
+```python
+import pandas as pd
+
+credit = pd.read_csv('data/german_credit_data.csv')
+credit.head()
+```
+
+W praktyce jest to pierwszy krok eksploracji danych – umożliwia szybkie wykrycie problemów takich jak niepoprawne separatory, błędne kodowanie znaków czy niewłaściwe typy kolumn.
+
+## Czyszczenie nazw kolumn
+
+Nazwy kolumn w danych często zawierają spacje, wielkie litery lub znaki specjalne, co utrudnia ich użycie w kodzie. W notebooku zastosowano funkcję `clean_names()` z biblioteki [pyjanitor](https://pyjanitor-devs.github.io/pyjanitor/), która automatycznie konwertuje nazwy kolumn do małych liter i zamienia spacje na podkreślenia.
+
+Takie ujednolicenie nazw kolumn jest dobrą praktyką w projektach analitycznych, ponieważ pozwala uniknąć błędów w kodzie i ułatwia pracę z danymi w różnych narzędziach. Alternatywnie można wykonać te operacje ręcznie przy użyciu metod stringowych biblioteki pandas.
+
+Kod:
+
+```python
+from janitor import clean_names
+credit = credit.clean_names()
+```
+
+Aby lepiej zrozumieć strukturę danych, wykorzystano metodę `describe()`, która oblicza podstawowe statystyki dla zmiennych numerycznych, takie jak średnia, odchylenie standardowe czy kwartyle.
+
+```python
+credit.describe()
+```
+
+Analiza statystyk opisowych pomaga wykryć potencjalne błędy w danych, na przykład nierealistyczne wartości lub bardzo duże rozrzuty zmiennych. Warto również zwrócić uwagę na różnice w skali poszczególnych cech, ponieważ mogą one wpływać na działanie niektórych algorytmów.
+
+## Braki danych
+
+Braki danych są jednym z najczęstszych problemów w analizie danych. W notebooku sprawdzono obecność braków w kolumnach `checking_account` oraz `saving_accounts`, a następnie zastosowano różne strategie ich uzupełniania.
+
+```python
+# credit["checking_account"].isna().sum()
+credit_nan = credit[~credit["checking_account"].isna() & ~credit["saving_accounts"].isna()]
+```
+
+Przed imputacją warto zawsze sprawdzić, czy brak danych jest losowy. W niektórych przypadkach brak wartości może sam w sobie zawierać informację (np. brak konta bankowego), dlatego zamiast imputacji można rozważyć utworzenie dodatkowej kategorii.
+
+W przypadku zmiennej `checking_account` brakujące wartości zostały zastąpione najczęściej występującą kategorią. Najpierw obliczono dominantę przy użyciu metody `mode()`, a następnie użyto funkcji `fillna()`.
+
+```python
+check_acc = credit["checking_account"].mode()[0]
+credit["checking_account"] = credit["checking_account"].fillna(check_acc)
+```
+
+Takie podejście jest często stosowane dla zmiennych kategorycznych, jednak może prowadzić do zwiększenia liczebności jednej kategorii i zaburzenia rozkładu danych. Dlatego w bardziej zaawansowanych analizach warto rozważyć inne metody imputacji.
+
+## Imputacja z wykorzystaniem scikit-learn
+
+Biblioteka **scikit-learn** oferuje wiele narzędzi do przygotowania i analizy danych, w tym m.in. do automatycznej imputacji brakujących danych. W notebooku zastosowano klasę `SimpleImputer`, która zastępuje braki najczęściej występującą wartością w kolumnie.
+
+```python
+from sklearn.impute import SimpleImputer
+
+imputer = SimpleImputer(strategy="most_frequent")
+credit[['saving_accounts']] = imputer.fit_transform(credit[['saving_accounts']])
+```
+
+Zaletą tego podejścia jest możliwość łatwego włączenia imputacji do pipeline’u przetwarzania danych. W praktyce szczególnie ważne jest, aby imputacja była oparta tylko na danych treningowych, a następnie stosowana do danych testowych, w celu zastosowania tej samej reguły na obu zbiorach.
+
+## Usuwanie duplikatów
+
+Duplikaty mogą pojawić się w zbiorach danych w wyniku błędów podczas łączenia tabel lub importowania danych z różnych źródeł. W notebooku zastosowano funkcję `drop_duplicates()`, która usuwa identyczne rekordy.
+
+```python
+credit_dedup = credit.drop_duplicates()
+```
+
+Przed usunięciem duplikatów warto upewnić się, że rzeczywiście są to błędy w danych, a nie powtarzające się, ale poprawne obserwacje. W niektórych analizach duplikaty mogą być bowiem naturalną częścią danych.
+
+## Feature Engineering
+
+Feature engineering polega na tworzeniu nowych cech, które mogą lepiej opisywać analizowane zjawisko. W notebooku utworzono kilka nowych zmiennych, m.in. grupy wiekowe, średnią ratę kredytu oraz relację kwoty kredytu do wieku klienta.
+
+```python
+credit["age_groups"] = pd.cut(credit["age"], 
+                              bins=[0, 30, 40, 50, 60, 70, 80], 
+                              labels=["30", "30-40", "40-50", "50-60", "60-70", "70"])
+```
+
+Tworzenie takich cech może znacząco poprawić jakość modeli, ponieważ wprowadza do danych dodatkową informację lub upraszcza złożone relacje. W praktyce warto jednak unikać tworzenia zbyt wielu cech, które mogą prowadzić do przeuczenia modelu.
+
+## Kodowanie zmiennych kategorycznych
+
+Modele uczenia maszynowego zazwyczaj wymagają danych numerycznych, dlatego zmienne tekstowe muszą zostać zakodowane. W notebooku zastosowano kodowanie One-Hot Encoding przy użyciu funkcji `get_dummies()` z biblioteki pandas.
+
+```python
+categorical_cols = ["sex", "job", "housing", "saving_accounts", "checking_account", "purpose", "age_groups"]
+credit_ohe = pd.get_dummies(credit, columns=categorical_cols, dtype=int)
+```
+
+Kodowanie to tworzy osobną kolumnę dla każdej kategorii. W praktyce należy uważać na zmienne o bardzo dużej liczbie kategorii, ponieważ mogą one znacząco zwiększyć liczbę kolumn w zbiorze danych.
+
+Alternatywnie można skorzystać z klasy `OneHotEncoder` z biblioteki scikit-learn, która jest często wykorzystywana w pipeline’ach modelowania.
+
+```python
+from sklearn.preprocessing import OneHotEncoder
+
+encoder = OneHotEncoder()
+credit_enc = encoder.fit_transform(credit[categorical_cols])
+```
+
+Zaletą tego podejścia jest możliwość łatwego zastosowania tego samego kodera do nowych danych. Jest to szczególnie ważne w systemach produkcyjnych, gdzie model musi przetwarzać dane napływające w czasie rzeczywistym.
+
+## Normalizacja cech
+
+Niektóre algorytmy, zwłaszcza oparte na odległościach, są wrażliwe na skalę zmiennych. Dlatego w notebooku zastosowano `StandardScaler`, który przekształca dane tak, aby miały średnią równą zero i odchylenie standardowe równe jeden.
+
+```python
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+credit_scaled = scaler.fit_transform(credit[numeric_cols])
+```
+
+Skalowanie powinno być wykonywane dopiero po podziale danych na zbiór treningowy i testowy. W przeciwnym razie model może nieświadomie uzyskać informacje o danych testowych.
+
+## Kodowanie zmiennej objaśnianej
+
+Zmienne kategoryczne używane jako zmienna docelowa również muszą zostać zakodowane numerycznie. W notebooku wykorzystano klasę `LabelEncoder`, która przypisuje każdej kategorii unikalną wartość liczbową.
+
+```python
+from sklearn.preprocessing import LabelEncoder
+
+le = LabelEncoder()
+le_risk = le.fit_transform(credit["risk"])
+```
+
+Takie kodowanie jest szczególnie przydatne w zadaniach klasyfikacyjnych. Warto jednak pamiętać, że liczby przypisane kategoriom nie mają znaczenia porządkowego – są jedynie identyfikatorami klas.
+
+## Budowa końcowego zbioru danych
+
+Na końcu wszystkie przetworzone dane zostały połączone w jeden zbiór danych zawierający przeskalowane zmienne numeryczne, zakodowane zmienne kategoryczne oraz zakodowaną zmienną docelową.
+
+```python
+credit_final = pd.concat([credit_scaled_df, credit_enc_df, pd.Series(le_risk, name="risk")], axis=1)
+credit_final.to_csv("data/german_credit_final.csv", index=False)
+```
+
+W praktyce warto zapisywać zarówno surowe dane, jak i ich przetworzoną wersję, aby umożliwić łatwe odtworzenie całego procesu analitycznego. 

@@ -1,7 +1,0 @@
-# Raporty
-
-## Wprowadzenie
-
-## Markdown
-
-## Quarto

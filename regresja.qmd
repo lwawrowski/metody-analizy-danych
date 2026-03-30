@@ -4,8 +4,175 @@
 
 ## Wprowadzenie
 
-## Regresja liniowa
+Regresja liniowa jest jedną z podstawowych metod analizy danych wykorzystywanych zarówno w statystyce, jak i uczeniu maszynowym. Jej głównym celem jest opisanie zależności pomiędzy zmiennymi oraz przewidywanie wartości jednej zmiennej na podstawie innych. W praktyce regresja jest używana w bardzo wielu dziedzinach — od prognozowania sprzedaży, przez analizę wynagrodzeń, aż po modelowanie kosztów ubezpieczeń.
+
+W analizie regresji wyróżnia się dwa główne cele. Pierwszym jest **cel poznawczy**, czyli badanie zależności pomiędzy zmiennymi i próba odpowiedzi na pytanie, czy zmiana jednej cechy wpływa na zmianę drugiej. Drugim jest **cel predykcyjny**, polegający na prognozowaniu przyszłych wartości na podstawie obserwowanych danych.
+
+Należy pamiętać, że model regresji jest jedynie przybliżeniem rzeczywistości. Nawet jeśli model dobrze dopasowuje się do danych historycznych, nie oznacza to, że będzie idealnie przewidywał przyszłość. W praktyce szczególnie istotne jest sprawdzanie założeń modelu oraz jego jakości predykcyjnej.
+
+W regresji liniowej zakłada się, że zależność pomiędzy zmiennymi można opisać funkcją liniową. W najprostszym przypadku oznacza to dopasowanie prostej do punktów na wykresie. Kluczowym elementem tej metody jest minimalizacja różnic pomiędzy wartościami rzeczywistymi a przewidywanymi przez model.
+
+## Regresja prosta
+
+Regresja prosta opisuje zależność pomiędzy jedną zmienną objaśnianą (zależną) oraz jedną zmienną objaśniającą (niezależną). W praktyce oznacza to próbę znalezienia takiej prostej, która najlepiej opisuje relację pomiędzy zmiennymi. Typowym przykładem jest zależność wysokości wynagrodzenia od liczby lat doświadczenia zawodowego.
+
+Przed rozpoczęciem budowy modelu regresji należy zawsze przeprowadzić wstępną analizę danych. Jednym z najważniejszych narzędzi na tym etapie jest wykres rozrzutu, który pozwala ocenić charakter zależności pomiędzy zmiennymi.
+
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+salary = pd.read_csv("salary.csv")
+
+plt.scatter(salary["YearsExperience"], salary["Salary"])
+plt.xlabel("Years of Experience")
+plt.ylabel("Salary")
+plt.title("Relationship between experience and salary")
+plt.show()
+```
+
+W powyższym kodzie dane są wczytywane przy użyciu biblioteki `pandas`, która stanowi podstawowe narzędzie do pracy z danymi tabelarycznymi w Pythonie. Następnie tworzony jest wykres rozrzutu za pomocą `matplotlib`, co pozwala wizualnie ocenić zależność pomiędzy zmiennymi.
+
+W praktyce wykres rozrzutu jest jednym z najważniejszych narzędzi diagnostycznych. Jeżeli punkty układają się w przybliżeniu wzdłuż linii prostej, istnieje duża szansa, że regresja liniowa będzie odpowiednim modelem. Jeśli natomiast zależność ma charakter krzywoliniowy, należy rozważyć transformacje zmiennych lub inne modele.
+
+Po wstępnej analizie danych można przejść do budowy modelu regresji liniowej. Jedną z najczęściej wykorzystywanych bibliotek w Pythonie jest `scikit-learn`.
+
+```python
+from sklearn.linear_model import LinearRegression
+
+X = salary[["YearsExperience"]]
+y = salary["Salary"]
+
+model = LinearRegression()
+model.fit(X, y)
+```
+
+W tym fragmencie kodu tworzony jest obiekt modelu regresji liniowej oraz dopasowywany do danych za pomocą metody `fit()`. Ważne jest, aby zmienne objaśniające były przekazywane jako macierz (DataFrame), nawet jeśli zawierają tylko jedną kolumnę.
+
+W praktyce należy zwrócić uwagę na strukturę danych wejściowych. Jednym z najczęstszych błędów początkujących analityków jest przekazywanie zmiennej objaśniającej jako jednowymiarowej tablicy zamiast macierzy.
+
+Po dopasowaniu modelu można odczytać jego parametry.
+
+```python
+print("Intercept:", model.intercept_)
+print("Slope:", model.coef_[0])
+```
+
+Wyraz wolny (intercept) określa wartość zmiennej zależnej dla zerowej wartości zmiennej niezależnej. Współczynnik kierunkowy informuje natomiast, o ile przeciętnie zmieni się wartość zmiennej zależnej przy jednostkowym wzroście zmiennej niezależnej.
+
+W praktyce interpretacja wyrazu wolnego nie zawsze ma sens. Jeśli wartość zerowa zmiennej objaśniającej nie występuje w danych lub nie ma znaczenia praktycznego, parametr ten pełni jedynie funkcję matematyczną w modelu.
+
+Jedną z głównych zalet regresji liniowej jest możliwość prognozowania nowych wartości.
+
+```python
+new_data = pd.DataFrame({
+    "YearsExperience": [3, 7, 10]
+})
+
+predictions = model.predict(new_data)
+
+print(predictions)
+```
+
+Metoda `predict()` pozwala obliczyć przewidywane wartości dla nowych obserwacji. W praktyce niezwykle ważne jest, aby nowe dane miały identyczną strukturę jak dane użyte do trenowania modelu.
+
+Częstym błędem jest wykonywanie predykcji na danych o innej skali lub strukturze niż dane treningowe. W takich przypadkach wyniki modelu mogą być całkowicie błędne.
+
+## Ocena jakości modelu regresji
+
+Po dopasowaniu modelu należy ocenić jego jakość. Jedną z najważniejszych miar dopasowania jest współczynnik determinacji (R^2).
+
+```python
+from sklearn.metrics import r2_score
+
+y_pred = model.predict(X)
+
+r2 = r2_score(y, y_pred)
+
+print("R^2:", r2)
+```
+
+Współczynnik (R^2) określa, jaki procent zmienności zmiennej zależnej został wyjaśniony przez model. Wartości bliskie jedności oznaczają dobre dopasowanie modelu do danych.
+
+W praktyce należy zachować ostrożność przy interpretacji wysokiego (R^2). Model może dobrze dopasowywać się do danych treningowych, ale jednocześnie słabo przewidywać nowe obserwacje — zjawisko to nazywa się przeuczeniem (overfitting).
+
+Oprócz współczynnika determinacji stosuje się także inne miary jakości modelu.
+
+```python
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+import numpy as np
+
+mse = mean_squared_error(y, y_pred)
+rmse = np.sqrt(mse)
+mae = mean_absolute_error(y, y_pred)
+
+print("MSE:", mse)
+print("RMSE:", rmse)
+print("MAE:", mae)
+```
+
+Miara MSE (Mean Squared Error) informuje o średnim kwadracie błędów, natomiast RMSE przedstawia błąd w tej samej jednostce co zmienna zależna. MAE z kolei określa średnią bezwzględną wartość błędów.
+
+W praktyce RMSE jest bardziej wrażliwy na duże błędy niż MAE. Dlatego analiza obu miar pozwala lepiej zrozumieć charakter błędów modelu.
 
 ## Regresja wieloraka
 
-## XAI
+Regresja wieloraka rozszerza model liniowy o wiele zmiennych objaśniających. Dzięki temu możliwe jest modelowanie bardziej złożonych zależności pomiędzy zmiennymi.
+
+W praktyce regresja wieloraka jest stosowana znacznie częściej niż regresja prosta, ponieważ większość zjawisk zależy od wielu czynników jednocześnie.
+
+```python
+insurance = pd.read_csv("insurance.csv")
+
+X = insurance[["age", "bmi", "children"]]
+y = insurance["charges"]
+
+model_multi = LinearRegression()
+model_multi.fit(X, y)
+```
+
+W tym przykładzie model regresji uwzględnia kilka zmiennych objaśniających jednocześnie. Każdy współczynnik modelu opisuje wpływ jednej zmiennej przy założeniu, że pozostałe pozostają stałe.
+
+W praktyce interpretacja współczynników w regresji wielorakiej wymaga szczególnej ostrożności. Wpływ jednej zmiennej może zależeć od obecności innych zmiennych w modelu.
+
+## Diagnostyka modelu 
+
+### Współliniowość zmiennych
+
+Jednym z najważniejszych problemów w regresji wielorakiej jest współliniowość zmiennych, czyli silna zależność pomiędzy zmiennymi objaśniającymi.
+
+```python
+correlation_matrix = X.corr()
+
+print(correlation_matrix)
+```
+
+Macierz korelacji pozwala zidentyfikować zmienne silnie ze sobą skorelowane. Wysoka korelacja pomiędzy zmiennymi może prowadzić do niestabilności współczynników modelu.
+
+W praktyce zmienne o bardzo wysokiej korelacji często należy usunąć lub połączyć w jedną zmienną. Pozwala to poprawić stabilność i interpretowalność modelu.
+
+### Wartości odstające i istotność zmiennych
+
+Wartości odstające mogą znacząco wpływać na dopasowanie modelu regresji liniowej. Nawet pojedyncza obserwacja może zmienić nachylenie prostej regresji.
+
+Do bardziej zaawansowanej diagnostyki modelu często wykorzystuje się bibliotekę `statsmodels`.
+
+```python
+import statsmodels.api as sm
+
+X_const = sm.add_constant(X)
+
+model_sm = sm.OLS(y, X_const).fit()
+
+print(model_sm.summary())
+```
+
+Raport generowany przez `summary()` zawiera wiele informacji statystycznych, takich jak wartości p, błędy standardowe oraz statystyki testowe.
+
+W praktyce analiza wartości p pozwala ocenić, czy dana zmienna ma istotny wpływ na zmienną zależną. Zmienne nieistotne statystycznie często można usunąć z modelu bez pogorszenia jego jakości.
+
+## Podsumowanie
+
+Regresja liniowa stanowi podstawowe narzędzie analizy danych i jest jednym z najczęściej wykorzystywanych modeli predykcyjnych. Jej popularność wynika z prostoty interpretacji oraz stosunkowo niewielkich wymagań obliczeniowych. Pomimo swojej prostoty metoda ta pozostaje niezwykle skuteczna w wielu zastosowaniach praktycznych.
+
+W praktyce najważniejszym elementem pracy z regresją liniową nie jest samo dopasowanie modelu, lecz jego interpretacja oraz właściwa ocena jakości. Dobry model to nie tylko taki, który dobrze dopasowuje się do danych historycznych, ale przede wszystkim taki, który dostarcza użytecznych i wiarygodnych prognoz.

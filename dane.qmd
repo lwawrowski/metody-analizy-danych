@@ -63,6 +63,39 @@ credit.describe()
 
 Analiza statystyk opisowych pomaga wykryć potencjalne błędy w danych, na przykład nierealistyczne wartości lub bardzo duże rozrzuty zmiennych. Warto również zwrócić uwagę na różnice w skali poszczególnych cech, ponieważ mogą one wpływać na działanie niektórych algorytmów.
 
+## Usuwanie duplikatów
+
+Duplikaty mogą pojawić się w zbiorach danych w wyniku błędów podczas łączenia tabel lub importowania danych z różnych źródeł. W notebooku zastosowano funkcję `drop_duplicates()`, która usuwa identyczne rekordy.
+
+```python
+credit_dedup = credit.drop_duplicates()
+```
+
+Przed usunięciem duplikatów warto upewnić się, że rzeczywiście są to błędy w danych, a nie powtarzające się, ale poprawne obserwacje. W niektórych analizach duplikaty mogą być bowiem naturalną częścią danych.
+
+## Podział danych na zbiór treningowy i testowy
+
+Podział zbioru danych na część treningową i testową powinien zostać wykonany przed rozpoczęciem właściwego przetwarzania danych, takiego jak imputacja braków, skalowanie czy tworzenie nowych cech. Zbiór treningowy służy do dopasowania parametrów przekształceń, natomiast zbiór testowy pozwala na obiektywną ocenę jakości modelu na danych, których wcześniej nie widział.
+
+W praktyce wiele operacji przygotowania danych, takich jak obliczanie średnich wartości czy standaryzacja zmiennych, wykorzystuje informacje statystyczne pochodzące z danych. Jeśli takie statystyki zostaną obliczone na całym zbiorze danych przed podziałem, model może nieświadomie wykorzystać informacje z danych testowych, co prowadzi do zjawiska określanego jako przeciek informacji (data leakage).
+
+```python
+from sklearn.model_selection import train_test_split
+
+X = credit.drop(columns="risk")
+y = credit["risk"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+```
+
+W praktyce zaleca się stosowanie parametru `stratify`, który zapewnia podobny rozkład klas w zbiorze treningowym i testowym. Jest to szczególnie istotne w zadaniach klasyfikacyjnych, gdzie liczba obserwacji w poszczególnych klasach może być nierównomierna.
+
 ## Braki danych
 
 Braki danych są jednym z najczęstszych problemów w analizie danych. W notebooku sprawdzono obecność braków w kolumnach `checking_account` oraz `saving_accounts`, a następnie zastosowano różne strategie ich uzupełniania.
@@ -95,16 +128,6 @@ credit[['saving_accounts']] = imputer.fit_transform(credit[['saving_accounts']])
 ```
 
 Zaletą tego podejścia jest możliwość łatwego włączenia imputacji do pipeline’u przetwarzania danych. W praktyce szczególnie ważne jest, aby imputacja była oparta tylko na danych treningowych, a następnie stosowana do danych testowych, w celu zastosowania tej samej reguły na obu zbiorach.
-
-## Usuwanie duplikatów
-
-Duplikaty mogą pojawić się w zbiorach danych w wyniku błędów podczas łączenia tabel lub importowania danych z różnych źródeł. W notebooku zastosowano funkcję `drop_duplicates()`, która usuwa identyczne rekordy.
-
-```python
-credit_dedup = credit.drop_duplicates()
-```
-
-Przed usunięciem duplikatów warto upewnić się, że rzeczywiście są to błędy w danych, a nie powtarzające się, ale poprawne obserwacje. W niektórych analizach duplikaty mogą być bowiem naturalną częścią danych.
 
 ## Feature Engineering
 
@@ -139,6 +162,42 @@ credit_enc = encoder.fit_transform(credit[categorical_cols])
 ```
 
 Zaletą tego podejścia jest możliwość łatwego zastosowania tego samego kodera do nowych danych. Jest to szczególnie ważne w systemach produkcyjnych, gdzie model musi przetwarzać dane napływające w czasie rzeczywistym.
+
+## Kodowanie zmiennych porządkowych (Ordinal Encoding)
+
+Niektóre zmienne kategoryczne mają naturalny porządek wartości, dlatego nie powinny być kodowane metodą One-Hot Encoding. Przykładem w zbiorze kredytowym jest zmienna `checking_account`, gdzie wartości takie jak *little*, *moderate* i *rich* odzwierciedlają rosnący poziom zasobów finansowych klienta. W takich przypadkach warto zastosować kodowanie porządkowe (ordinal encoding), które zachowuje relacje między kategoriami.
+
+W przedstawionym kodzie wykorzystano klasę `OrdinalEncoder` z biblioteki `scikit-learn`, która przypisuje kolejnym kategoriom wartości liczbowe zgodnie z ich kolejnością występowania w danych. W praktyce zaleca się jednak jawne zdefiniowanie kolejności kategorii, ponieważ domyślne sortowanie alfabetyczne może nie odzwierciedlać rzeczywistego porządku logicznego. Dodatkowo przed kodowaniem należy upewnić się, że wszystkie wartości kategorii są zapisane w jednolity sposób, bez literówek i różnic w wielkości liter.
+
+Kod:
+
+```python
+from sklearn.preprocessing import OrdinalEncoder
+
+# Jawne określenie kolejności kategorii
+account_order = [["little", "moderate", "rich"]]
+
+ordinal_encoder = OrdinalEncoder(categories=account_order)
+
+credit["checking_account_encoded"] = ordinal_encoder.fit_transform(
+    credit[["checking_account"]]
+)
+```
+
+W praktyce kodowanie porządkowe jest szczególnie użyteczne w przypadku modeli liniowych oraz drzew decyzyjnych, które potrafią wykorzystać informację o uporządkowaniu wartości. Należy jednak pamiętać, że zastosowanie ordinal encodingu dla zmiennej bez naturalnego porządku może wprowadzić sztuczne zależności i pogorszyć jakość modelu.
+
+### Tworzenie cechy na podstawie średniej wartości w grupie
+
+W przedstawionym kodzie utworzono nową zmienną `job_avg_credit_amount`, która zawiera średnią wartość kredytu (`credit_amount`) obliczoną w ramach każdej kategorii zmiennej `job`. Wykorzystanie funkcji `groupby()` w połączeniu z `transform("mean")` pozwala przypisać każdemu rekordowi średnią wartość dla jego grupy, bez zmiany liczby wierszy w zbiorze danych.
+
+```python
+credit["job_avg_credit_amount"] = (
+    credit.groupby("job")["credit_amount"]
+    .transform("mean")
+)
+```
+
+W praktyce takie agregacyjne cechy często poprawiają jakość modeli, ponieważ dostarczają informacji o typowym zachowaniu danej grupy, co ułatwia wykrywanie nietypowych przypadków. Należy jednak pamiętać, aby tego typu statystyki obliczać wyłącznie na zbiorze treningowym, a następnie stosować je do danych testowych, aby uniknąć przecieku informacji (data leakage).
 
 ## Normalizacja cech
 

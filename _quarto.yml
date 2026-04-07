@@ -1,10 +1,12 @@
 project:
   type: book
+  
+lang: pl
 
 book:
   title: "Metody przetwarzania i analizy danych"
   author: "Łukasz Wawrowski"
-  date: "03/31/2026"
+  date: "04/07/2026"
   favicon: favicon.png
   chapters:
     - index.qmd
@@ -17,4 +19,3 @@ book:
 format:
   html:
     theme: cosmo
-    toc-title: "Spis treści"

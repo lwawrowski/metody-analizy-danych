@@ -2,6 +2,10 @@
 
 Jeden ze sposobów instalacji Pythona na Windowsie to pobranie instalatora z oficjalnej strony [https://www.python.org/downloads/windows/](https://www.python.org/downloads/windows/)
 
+![](img/python.png)
+
+Wybieramy [Windows Installer (64-bit)](https://www.python.org/ftp/python/3.14.3/python-3.14.3-amd64.exe)
+
 Ważne, żeby podczas instalacji zaznaczyć następujące opcje:
 
 - *Add Python to PATH* (żeby mieć Pythona dostępnego w konsoli)
@@ -52,6 +56,11 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 i spróbować ponownie uruchomić środowisko wirtualne.
 
+**venv** to standardowe narzędzie do tworzenia środowisk wirtualnych dostępne w Pythonie od wersji 3.3. Umożliwia tworzenie izolowanych środowisk z własnymi bibliotekami, dzięki czemu różne projekty mogą używać różnych wersji pakietów bez konfliktów. Jest lekkie, proste w użyciu i nie wymaga instalacji dodatkowego oprogramowania.
+
+**conda** to bardziej rozbudowany menedżer środowisk i pakietów, dostępny w dystrybucjach takich jak Anaconda czy Miniconda. W przeciwieństwie do venv pozwala instalować nie tylko pakiety Pythona, ale także zależności systemowe i biblioteki napisane w innych językach. 
+
+**uv** to nowoczesne narzędzie do zarządzania środowiskami i pakietami w Pythonie, zaprojektowane z myślą o bardzo wysokiej wydajności. Jest napisane w języku Rust i może pełnić rolę zamiennika dla narzędzi takich jak venv i pip, oferując znacznie szybsze tworzenie środowisk oraz instalowanie zależności.
 
 ## Instalacja pakietów
 
@@ -79,12 +88,6 @@ W ten sposób łatwo też zainstalować wymagane pakiety przy migracji projektu.
 pip install -r requirements.txt
 ```
 
-## Anaconda
-
-Anaconda dostarcza zestaw narzędzi + python + jupyter + numpy + pandas itp. w pakiecie: [https://www.anaconda.com/download](https://www.anaconda.com/download)
-
-Po instalacji anacondy dostajemy interfejs GUI do zarządzania pakietami i środowiskami wirtualnymi. Środowiska wirtualne w anacondzie są tworzone z reguły poza katalogiem projektu.
-
 ## IDE
 
 Do wygodnego korzystania z pythona przyda się odpowiednie zintegrowane środowisko programistyczne:
@@ -98,3 +101,5 @@ Do wygodnego korzystania z pythona przyda się odpowiednie zintegrowane środowi
 - [Google Colab](https://colab.research.google.com/) - wersja online
 
 - [RStudio](https://posit.co/download/rstudio-desktop/)
+
+- [Positron](https://positron.posit.co/) - zmodyfikowany VSC pod analizę danych

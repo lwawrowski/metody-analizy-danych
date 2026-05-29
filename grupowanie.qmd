@@ -4,16 +4,183 @@
 
 ## Wprowadzenie
 
-## Grupowanie obiektów
+Grupowanie (ang. *clustering*) należy do podstawowych metod uczenia nienadzorowanego. Jego celem jest podział zbioru obserwacji na grupy (klastry) w taki sposób, aby obiekty należące do tej samej grupy były do siebie możliwie podobne, natomiast obiekty z różnych grup różniły się od siebie jak najbardziej. W przeciwieństwie do metod klasyfikacji nie dysponujemy tutaj zmienną objaśnianą wskazującą poprawną przynależność do grup. Algorytm samodzielnie poszukuje naturalnych struktur występujących w danych.
 
-### Metoda k-średnich
+Podstawą większości metod grupowania jest wyznaczanie odległości pomiędzy obserwacjami. Najczęściej wykorzystywana jest odległość euklidesowa, jednak jej interpretacja wymaga zachowania porównywalnej skali wszystkich zmiennych. W praktyce dane opisujące obiekty często są wyrażone w różnych jednostkach. W analizie klientów mogą to być jednocześnie wiek wyrażony w latach, roczne wydatki w walucie oraz liczba wizyt w sklepie. Bez odpowiedniego przygotowania danych zmienna o największych wartościach liczbowych mogłaby całkowicie zdominować proces grupowania.
 
-### Metoda hierarchiczna
+## Standaryzacja zmiennych
 
-### Wykrywanie anomalii
+Z tego względu przed wykonaniem grupowania zazwyczaj przeprowadza się normalizację danych. Najpopularniejszą metodą jest standaryzacja, polegająca na przekształceniu każdej obserwacji według wzoru:
 
-## Grupowanie cech
+$$z=\frac{x-\bar{x}}{s}$$
 
-### Metoda głównych składowych
 
-### UMAP
+gdzie ($\bar{x}$) oznacza średnią arytmetyczną, natomiast ($s$) odchylenie standardowe danej cechy.
+
+Po standaryzacji każda zmienna ma średnią równą zero i odchylenie standardowe równe jeden. Dzięki temu wszystkie cechy wpływają na obliczane odległości w podobnym stopniu.
+
+W prezentacji zilustrowano wpływ standaryzacji na dane dotyczące sklepów. Wartości liczby klientów oraz sprzedaży zostały przeskalowane do wspólnej jednostki bezwymiarowej. Choć względne położenie punktów pozostaje takie samo, zmienia się skala osi, dzięki czemu żadna zmienna nie dominuje nad drugą podczas obliczania odległości.
+
+W notebooku proces ten realizowany jest przy pomocy klasy `StandardScaler` z biblioteki `scikit-learn`:
+
+```python
+from sklearn.preprocessing import StandardScaler
+
+x = klienci[["roczny_dochod", "wskaznik_wydatkow"]]
+scaler = StandardScaler()
+z = scaler.fit_transform(x)
+```
+
+Metoda `fit_transform()` najpierw oblicza średnie i odchylenia standardowe dla każdej zmiennej, a następnie dokonuje standaryzacji wszystkich obserwacji. Wynik zapisywany jest w macierzy `z`, która stanowi wejście dla algorytmów grupowania.
+
+## Metoda k-średnich
+
+Jedną z najpopularniejszych metod grupowania jest algorytm k-średnich (*k-means*). Jego zadaniem jest podział danych na zadaną wcześniej liczbę grup (k). Algorytm rozpoczyna działanie od losowego wyboru punktów reprezentujących środki klastrów, nazywane centroidami. Następnie każda obserwacja zostaje przypisana do najbliższego centroidu. Po wykonaniu przypisania obliczane są nowe położenia środków grup jako średnie wartości wszystkich obiektów należących do danego klastra. Procedura jest powtarzana aż do momentu, gdy przypisania obserwacji przestaną się zmieniać.
+
+Celem algorytmu jest minimalizacja sumy kwadratów odległości pomiędzy obserwacjami a centroidem klastra. Wielkość tę określa się mianem inercji (*inertia*):
+
+$$\sum_{i=1}^{n}(x_i-c_j)^2$$
+
+gdzie ($c_j$) oznacza centroid klastra, do którego należy obserwacja ($x_i$).
+
+W notebooku przeprowadzono segmentację klientów sklepu na podstawie rocznego dochodu oraz wskaźnika wydatków:
+
+```python
+from sklearn.cluster import KMeans
+
+kmeans = KMeans(
+    n_clusters=5,
+    init='k-means++',
+    random_state=42
+)
+
+clusters_kmeans = kmeans.fit_predict(z)
+```
+
+Parametr `n_clusters` określa liczbę grup, natomiast `init='k-means++'` wykorzystuje ulepszoną metodę inicjalizacji centroidów. Pozwala ona uniknąć wielu problemów związanych z losowym wyborem punktów startowych i zwykle prowadzi do lepszych rezultatów. Funkcja `fit_predict()` jednocześnie dopasowuje model i zwraca numer klastra przypisany do każdej obserwacji.
+
+Uzyskane etykiety grup zostały następnie dodane do zbioru danych i wykorzystane do wizualizacji:
+
+```python
+klienci["clusters_kmeans"] = clusters_kmeans
+```
+
+Kolorowanie punktów według numeru klastra pozwala ocenić, czy wyodrębnione segmenty klientów są logiczne i dobrze rozdzielone.
+
+### Wybór optymalnej liczby klastrów
+
+Jednym z najważniejszych problemów w metodzie k-średnich jest dobór liczby grup. Zbyt mała liczba klastrów prowadzi do utraty informacji, natomiast zbyt duża może powodować sztuczny podział naturalnych segmentów.
+
+W notebooku wykorzystano dwa popularne kryteria oceny jakości grupowania. Pierwszym jest metoda łokcia (*Elbow Method*). Polega ona na obliczeniu wartości inercji dla różnych liczb klastrów:
+
+```python
+inertia = []
+
+for i in range(2,11):
+    kmeans = KMeans(n_clusters=i,
+                    init='k-means++',
+                    random_state=42)
+    kmeans.fit(z)
+    inertia.append(kmeans.inertia_)
+```
+
+Następnie tworzony jest wykres zależności inercji od liczby grup. Poszukuje się punktu załamania krzywej przypominającego kształtem łokieć. Oznacza on moment, w którym dalsze zwiększanie liczby klastrów przynosi już niewielką poprawę jakości podziału.
+
+Drugim zastosowanym kryterium jest indeks Calińskiego-Harabasza:
+
+```python
+from sklearn.metrics import calinski_harabasz_score
+
+ch_scores.append(
+    calinski_harabasz_score(z, clusters_kmeans)
+)
+```
+
+Miara ta uwzględnia jednocześnie zwartość klastrów i ich wzajemne oddalenie. Im większa wartość indeksu, tym lepiej rozdzielone są grupy. Najwyższa wartość wskaźnika sugeruje najbardziej odpowiednią liczbę klastrów.
+
+## Metoda hierarchiczna
+
+Alternatywą dla k-średnich jest grupowanie hierarchiczne. W podejściu aglomeracyjnym każda obserwacja początkowo tworzy osobny klaster. Następnie dwa najbardziej podobne klastry są sukcesywnie łączone aż do momentu utworzenia jednej grupy zawierającej wszystkie obiekty.
+
+Kluczowym elementem jest sposób definiowania odległości pomiędzy grupami. Metoda pojedynczego wiązania (*single linkage*) wykorzystuje najbliższe punkty należące do różnych klastrów. Metoda pełnego wiązania (*complete linkage*) bierze pod uwagę najbardziej odległe obserwacje. Metoda średnich połączeń (*average linkage*) wykorzystuje średnią odległość pomiędzy wszystkimi parami punktów. Szczególnie popularna jest metoda Warda, która minimalizuje przyrost wariancji wewnątrz klastrów i zwykle tworzy zwarte, dobrze rozdzielone grupy.
+
+W notebooku wykorzystano właśnie metodę Warda:
+
+```python
+from sklearn.cluster import AgglomerativeClustering
+
+group_hier = AgglomerativeClustering(
+    n_clusters=5,
+    linkage='ward'
+)
+
+clusters_hier = group_hier.fit_predict(z)
+```
+
+Podobnie jak wcześniej każda obserwacja otrzymuje numer klastra. Następnie można porównać wyniki obu metod:
+
+```python
+pd.crosstab(
+    klienci["clusters_kmeans"],
+    klienci["clusters_hier"]
+)
+```
+
+Tabela krzyżowa pozwala ocenić zgodność podziałów uzyskanych przez różne algorytmy.
+
+### Dendrogram
+
+Szczególną zaletą grupowania hierarchicznego jest możliwość przedstawienia wyników w postaci dendrogramu. Jest to drzewo pokazujące kolejne etapy łączenia grup.
+
+```python
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+linked = linkage(z, method='ward')
+dendrogram(linked, color_threshold=8)
+```
+
+Wysokość połączenia na dendrogramie odpowiada odległości pomiędzy klastrami. Analizując wykres można określić liczbę naturalnych grup poprzez przecięcie drzewa poziomą linią. Duże pionowe odstępy sugerują istnienie dobrze odseparowanych klastrów.
+
+## Redukcja wymiarowości
+
+W przypadku danych wielowymiarowych interpretacja wyników grupowania może być utrudniona. Pomocne stają się wtedy metody redukcji wymiarowości, których zadaniem jest odwzorowanie danych do przestrzeni o mniejszej liczbie wymiarów przy zachowaniu możliwie dużej ilości informacji.
+
+Najbardziej klasyczną metodą jest analiza głównych składowych (PCA). Poszukuje ona nowych zmiennych będących liniowymi kombinacjami cech pierwotnych. Nowe osie maksymalizują wyjaśnianą wariancję danych.
+
+W notebooku zastosowano PCA do redukcji czterech cech samochodów do dwóch wymiarów:
+
+```python
+from sklearn.decomposition import PCA
+
+pca = PCA(n_components=2)
+pca_auta = pca.fit_transform(z_auta)
+```
+
+Następnie sprawdzono udział wyjaśnianej wariancji:
+
+```python
+print(pca.explained_variance_ratio_)
+```
+
+Suma tych wartości informuje, jaka część całkowitej informacji została zachowana po redukcji wymiarów. Jeżeli wynik przekracza około 80–90%, dwuwymiarowa reprezentacja danych może być uznana za bardzo dobrą.
+
+Oprócz PCA coraz częściej wykorzystuje się nieliniowe metody redukcji wymiarowości, takie jak t-SNE oraz UMAP. W notebooku zastosowano UMAP:
+
+```python
+from umap import UMAP
+
+umap = UMAP(
+    n_components=2,
+    random_state=42
+)
+
+umap_auta = umap.fit_transform(z_auta)
+```
+
+Metoda ta dobrze zachowuje lokalną strukturę danych i często umożliwia wyraźniejsze rozdzielenie klastrów niż PCA. Uzyskane współrzędne można wykorzystać do wizualizacji wyników grupowania na płaszczyźnie.
+
+## Podsumowanie
+
+Przed wykonaniem grupowania warto przeprowadzić analizę jakości danych, sprawdzić występowanie braków danych oraz obserwacji odstających. Nietypowe obiekty mogą znacząco wpływać na położenie centroidów i prowadzić do błędnej segmentacji. Dobór cech powinien opierać się nie tylko na dostępności danych, ale również na ich interpretacyjnej wartości oraz zmienności. W przypadku dużej liczby silnie skorelowanych zmiennych pomocne może być zastosowanie PCA przed grupowaniem.
+
+Nie istnieje uniwersalnie najlepszy algorytm grupowania. Metoda k-średnich dobrze sprawdza się dla zwartych i względnie kulistych klastrów, natomiast grupowanie hierarchiczne pozwala lepiej analizować strukturę danych i nie wymaga wielokrotnego uruchamiania algorytmu dla różnych wartości liczby grup. W danych zawierających szum lub klastry o nieregularnych kształtach często lepsze wyniki osiągają algorytmy gęstościowe, takie jak DBSCAN. Dlatego w praktyce zaleca się porównywanie wyników kilku metod oraz ocenę ich jakości przy użyciu odpowiednich miar i wiedzy dziedzinowej.

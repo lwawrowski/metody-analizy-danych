@@ -247,13 +247,145 @@ Niektóre z nich mają na celu wykrywanie anomalii, dzieląc dane zawsze na dwie
 Źródło: https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html
 ---
 
-# Redukcja wymiarów
+# Redukcja wymiarowości
 
-- [PCA](https://miroslawmamczur.pl/na-czym-polega-analiza-skladowych-glownych-pca/)
+W rzeczywistych zbiorach danych obiekty często opisane są przez dużą liczbę cech.
 
-- [t-SNE](https://miroslawmamczur.pl/jak-dziala-metoda-redukcji-wymiarow-t-sne/)
+Duża liczba zmiennych może powodować:
 
-- [UMAP](https://umap-learn.readthedocs.io/en/latest/basic_usage.html)
+- trudności w wizualizacji danych,
+
+- wydłużenie czasu obliczeń,
+
+- występowanie silnie skorelowanych cech,
+
+- pogorszenie skuteczności algorytmów.
+
+Redukcja wymiarowości polega na zastąpieniu wielu cech mniejszą liczbą nowych zmiennych zachowujących najważniejsze informacje o danych.
+
+---
+
+# Analiza głównych składowych (PCA)
+
+PCA (*Principal Component Analysis*) tworzy nowe zmienne zwane **głównymi składowymi**.
+
+Każda składowa jest kombinacją liniową oryginalnych cech.
+
+Tak stworzone zmienne:
+
+- są wzajemnie nieskorelowane,
+
+- wyjaśniają możliwie dużą część wariancji danych.
+
+Pierwsza składowa wyjaśnia największą część zmienności, druga największą z pozostałej itd.
+
+---
+
+# Implementacja PCA
+
+```python
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+scaler = StandardScaler()
+z = scaler.fit_transform(x)
+
+pca = PCA(n_components=2)
+
+x_pca = pca.fit_transform(z)
+```
+
+Parametr `n_components` określa liczbę nowych wymiarów.
+
+---
+
+# PCA - ocena jakości
+
+```python
+print(pca.explained_variance_ratio_)
+```
+
+Przykładowy wynik:
+
+```python
+[0.62, 0.24]
+```
+
+Oznacza to, że:
+
+- pierwsza składowa wyjaśnia 62% wariancji,
+
+- druga składowa wyjaśnia 24% wariancji.
+
+Łącznie zachowano 86% informacji zawartej w danych.
+
+Po redukcji do dwóch wymiarów można łatwo zwizualizować wyniki grupowania, ale wartości na osiach nie mają żadnej interpretacji.
+
+---
+
+# t-SNE
+
+t-SNE (*t-Distributed Stochastic Neighbor Embedding*) jest nieliniową metodą redukcji wymiarowości.
+
+Jej celem jest zachowanie lokalnych sąsiedztw pomiędzy obserwacjami.
+
+Podobne obiekty pozostają blisko siebie również po redukcji wymiarów.
+
+---
+
+# Implementacja t-SNE
+
+```python
+from sklearn.manifold import TSNE
+
+tsne = TSNE(
+    n_components=2,
+    random_state=42
+)
+
+x_tsne = tsne.fit_transform(z)
+```
+
+---
+
+# UMAP
+
+UMAP (*Uniform Manifold Approximation and Projection*) jest nowoczesną metodą redukcji wymiarowości.
+
+Łączy zalety PCA i t-SNE:
+
+- zachowuje lokalną strukturę danych,
+
+- lepiej odwzorowuje strukturę globalną,
+
+- działa szybciej dla dużych zbiorów danych.
+
+Coraz częściej stosowany jest jako standardowa metoda wizualizacji danych wielowymiarowych.
+
+---
+
+# Implementacja UMAP
+
+```python
+from umap import UMAP
+
+umap = UMAP(
+    n_components=2,
+    random_state=42
+)
+
+x_umap = umap.fit_transform(z)
+```
+
+---
+
+class: inverse
+
+# Zadanie
+
+Dla danych dotyczących samochodów wykonaj standaryzację cech, zredukuj dane do dwóch wymiarów i porównaj wyniki PCA oraz UMAP.
+
+`r countdown(minutes = 10, seconds = 0, top = 0)`
 
 ---
 

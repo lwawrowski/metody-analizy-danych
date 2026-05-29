@@ -6,7 +6,7 @@ lang: pl
 book:
   title: "Metody przetwarzania i analizy danych"
   author: "Łukasz Wawrowski"
-  date: "04/07/2026"
+  date: "05/29/2026"
   favicon: favicon.png
   chapters:
     - index.qmd

@@ -4,11 +4,343 @@
 
 ## Wprowadzenie
 
-## Drzewo decyzyjne
+Klasyfikacja jest jedną z podstawowych metod uczenia nadzorowanego, w której celem jest przypisanie obserwacji do jednej z wcześniej zdefiniowanych klas. W praktyce klasyfikacja wykorzystywana jest m.in. do oceny ryzyka kredytowego, diagnoz medycznych, wykrywania spamu czy segmentacji klientów. Kluczową cechą uczenia nadzorowanego jest dostępność danych treningowych zawierających poprawne etykiety klas.
+
+Problemy klasyfikacyjne można podzielić na trzy podstawowe typy. W klasyfikacji binarnej model rozróżnia tylko dwie klasy, co jest najczęstszym przypadkiem w zastosowaniach biznesowych. Klasyfikacja wieloklasowa obejmuje więcej niż dwie klasy, natomiast klasyfikacja wieloetykietowa pozwala przypisać jednej obserwacji wiele etykiet jednocześnie, co jest typowe np. w analizie tekstów.
+
+W praktyce najważniejszą decyzją na początku pracy analitycznej jest poprawne zdefiniowanie zmiennej docelowej. Warto upewnić się, że etykiety klas są jednoznaczne i nie zawierają błędów, ponieważ nawet niewielkie zanieczyszczenia danych uczą model nieprawidłowych wzorców.
+
+Proces budowy modelu klasyfikacyjnego zawsze rozpoczyna się od przygotowania danych. Obejmuje to wczytanie danych, oczyszczenie nazw kolumn, obsługę braków danych oraz podział na zmienne objaśniające i zmienną docelową.
+
+Przykładowy kod wczytujący dane i przygotowujący strukturę danych może wyglądać następująco:
+
+```python
+import pandas as pd
+
+credit = pd.read_csv("data/german_credit_final.csv")
+
+X = credit.drop("risk", axis=1)
+y = credit["risk"]
+```
+
+Kolejnym krokiem jest podział danych na zbiór treningowy i testowy:
+
+```python
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42
+)
+```
+
+Podział danych na zbiór treningowy i testowy jest absolutnie kluczowy dla rzetelnej oceny modelu. Ustawienie parametru `random_state` zapewnia powtarzalność eksperymentów, co jest szczególnie ważne podczas strojenia modeli i porównywania wyników.
+
+Warto również sprawdzić proporcje klas:
+
+```python
+y.value_counts(normalize=True)
+```
+
+Jeżeli klasy są silnie niezrównoważone, model może nauczyć się przewidywać tylko dominującą klasę. W takich przypadkach warto stosować metody ważenia klas (`class_weight`) lub techniki równoważenia danych.
+
+## Drzewa decyzyjne
+
+Drzewa decyzyjne należą do najbardziej intuicyjnych metod klasyfikacji. Model podejmuje decyzje poprzez kolejne podziały danych według wartości wybranych cech. Każdy podział ma na celu zwiększenie jednorodności klas w powstałych podzbiorach.
+
+Największą zaletą drzew decyzyjnych jest ich interpretowalność. Struktura drzewa pozwala zrozumieć logikę podejmowanych decyzji, co jest szczególnie istotne w zastosowaniach wymagających transparentności modeli.
+
+Przykład trenowania drzewa decyzyjnego:
+
+```python
+from sklearn.tree import DecisionTreeClassifier
+
+clf_tree = DecisionTreeClassifier(
+    max_depth=4,
+    random_state=42
+)
+
+clf_tree.fit(X_train, y_train)
+```
+
+Parametr `max_depth` ogranicza maksymalną głębokość drzewa i jest jednym z najważniejszych narzędzi kontroli przeuczenia. Drzewo bez ograniczeń bardzo szybko dopasowuje się idealnie do danych treningowych, ale traci zdolność generalizacji.
+
+W praktyce dobrą strategią jest rozpoczęcie od małej głębokości drzewa, a następnie jej stopniowe zwiększanie.
+
+Jedną z unikalnych cech drzew decyzyjnych jest możliwość ich wizualizacji. Dzięki temu można zidentyfikować najważniejsze cechy wpływające na klasyfikację.
+
+```python
+from sklearn.tree import plot_tree
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(20, 10))
+
+plot_tree(
+    clf_tree,
+    feature_names=X.columns,
+    class_names=["bad", "good"],
+    filled=True
+)
+
+plt.show()
+```
+
+Cechy pojawiające się w górnych poziomach drzewa mają zwykle największy wpływ na predykcję. Analiza struktury drzewa może ujawnić zależności, które nie są widoczne w klasycznych analizach statystycznych.
+
+W praktyce wizualizacja ma sens tylko dla stosunkowo płytkich drzew. W przypadku bardzo dużych modeli warto zamiast tego analizować ważność cech.
+
+## Miary jakości klasyfikacji
+
+Po wytrenowaniu modelu można wygenerować predykcje dla nowych danych. Predykcja polega na przejściu przez strukturę drzewa zgodnie z wartościami cech.
+
+```python
+y_pred_train = clf_tree.predict(X_train)
+y_pred_test = clf_tree.predict(X_test)
+```
+
+Istotne jest, aby oddzielnie analizować wyniki dla zbioru treningowego i testowego. Jeżeli model osiąga bardzo wysoką skuteczność na danych treningowych, ale znacznie niższą na testowych, oznacza to przeuczenie.
+
+Ocena jakości modelu klasyfikacyjnego jest równie ważna jak jego trenowanie. Najczęściej stosowaną miarą jest dokładność (accuracy), która określa procent poprawnie sklasyfikowanych przypadków.
+
+```python
+from sklearn.metrics import accuracy_score
+
+accuracy_score(y_test, y_pred_test)
+```
+
+Dokładność jest intuicyjna, ale w wielu przypadkach niewystarczająca. Szczególnie w sytuacjach, gdy klasy są niezrównoważone, model może osiągać wysoką dokładność mimo słabej jakości predykcji.
+
+Dlatego stosuje się również inne miary, takie jak precyzja, czułość oraz miara F1:
+
+```python
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
+
+precision_score(y_test, y_pred_test, pos_label="good")
+recall_score(y_test, y_pred_test, pos_label="good")
+f1_score(y_test, y_pred_test, pos_label="good")
+```
+
+W praktyce wybór miary zależy od kontekstu problemu. W zadaniach medycznych ważniejsza jest czułość, ponieważ pominięcie chorego pacjenta może mieć poważne konsekwencje. W zadaniach finansowych większe znaczenie może mieć precyzja, aby uniknąć kosztownych błędów.
+
+Macierz pomyłek pozwala szczegółowo przeanalizować, jakie błędy popełnia model. Zawiera liczbę poprawnych i błędnych klasyfikacji dla każdej klasy.
+
+```python
+from sklearn.metrics import confusion_matrix
+
+cm = confusion_matrix(y_test, y_pred_test)
+cm
+```
+
+Analiza macierzy pomyłek jest jedną z najbardziej wartościowych praktyk w analizie modeli. Zamiast skupiać się tylko na jednej liczbie, analityk może zobaczyć strukturę błędów i zdecydować, czy model spełnia wymagania biznesowe.
+
+## Maszyna wektorów nośnych 
+
+Maszyny wektorów nośnych (SVM — Support Vector Machines) należą do grupy algorytmów klasyfikacyjnych, które koncentrują się na znalezieniu optymalnej granicy decyzyjnej pomiędzy klasami. Kluczową ideą tej metody jest maksymalizacja marginesu, czyli odległości pomiędzy granicą decyzyjną a najbliższymi punktami danych należącymi do różnych klas. Punkty te nazywane są wektorami nośnymi i to właśnie one decydują o położeniu granicy klasyfikacyjnej.
+
+W praktyce SVM szczególnie dobrze radzi sobie z danymi, które nie są liniowo separowalne. Dzięki zastosowaniu funkcji jądra możliwe jest przekształcenie danych do przestrzeni o wyższym wymiarze, w której separacja klas staje się prostsza. Najczęściej stosowaną funkcją jądra jest funkcja radialna (RBF), która zapewnia dobrą jakość klasyfikacji w wielu zadaniach.
+
+Przykładowa implementacja modelu SVM z wykorzystaniem standaryzacji danych:
+
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+
+pipeline_svm = Pipeline([
+    ("scaler", StandardScaler()),
+    ("svm", SVC(
+        kernel="rbf",
+        C=1.0,
+        gamma="scale",
+        probability=True,
+        random_state=42
+    ))
+])
+
+pipeline_svm.fit(X_train, y_train)
+```
+
+W praktyce niezwykle istotne jest skalowanie danych przed użyciem SVM. Różne zakresy wartości cech mogą znacząco wpłynąć na działanie modelu, ponieważ SVM opiera się na obliczeniach odległości między punktami.
+
+Dobrym zwyczajem jest rozpoczęcie pracy z parametrami `C=1` i `gamma="scale"`, a następnie ich stopniowa modyfikacja. Zbyt duże wartości parametrów prowadzą często do przeuczenia modelu.
 
 ## Lasy losowe
 
-## XGBoost
+Lasy losowe stanowią rozwinięcie drzew decyzyjnych i należą do najczęściej stosowanych metod klasyfikacyjnych w analizie danych tabelarycznych. Metoda ta polega na budowie wielu drzew decyzyjnych na losowych podzbiorach danych oraz losowych podzbiorach cech. Wynik końcowy uzyskiwany jest poprzez agregację predykcji wszystkich drzew.
 
-## XAI
+Główną zaletą lasów losowych jest redukcja przeuczenia, które często występuje w pojedynczych drzewach decyzyjnych. Losowość wprowadzana podczas budowy modelu powoduje, że poszczególne drzewa uczą się różnych aspektów danych, co zwiększa stabilność modelu.
 
+Przykładowa implementacja lasu losowego:
+
+```python
+from sklearn.ensemble import RandomForestClassifier
+
+clf_rf = RandomForestClassifier(
+    n_estimators=200,
+    max_depth=8,
+    random_state=42,
+    n_jobs=-1
+)
+
+clf_rf.fit(X_train, y_train)
+```
+
+Parametr `n_estimators` określa liczbę drzew w lesie i ma bezpośredni wpływ na jakość modelu. W praktyce zwiększanie liczby drzew zwykle poprawia wyniki, jednak kosztem wydłużenia czasu obliczeń.
+
+Warto pamiętać, że lasy losowe dobrze radzą sobie z danymi o mieszanych typach zmiennych oraz nie wymagają skalowania danych, co stanowi ich istotną przewagę nad SVM.
+
+## Boosting gradientowy
+
+XGBoost należy do grupy metod boostingowych i jest jedną z najskuteczniejszych metod klasyfikacji dostępnych współcześnie. W odróżnieniu od lasów losowych, gdzie drzewa budowane są niezależnie, w boostingach kolejne drzewa uczą się na błędach poprzednich modeli.
+
+Idea działania XGBoost polega na stopniowym poprawianiu jakości modelu poprzez minimalizację funkcji kosztu. Dzięki zastosowaniu regularyzacji model ten jest odporny na przeuczenie oraz osiąga bardzo dobre wyniki w wielu konkursach analizy danych.
+
+Przykład implementacji modelu XGBoost:
+
+```python
+from xgboost import XGBClassifier
+
+clf_xgb = XGBClassifier(
+    n_estimators=300,
+    max_depth=6,
+    learning_rate=0.05,
+    subsample=0.8,
+    colsample_bytree=0.8,
+    random_state=42
+)
+
+clf_xgb.fit(X_train, y_train)
+```
+
+Parametr `learning_rate` kontroluje tempo uczenia modelu. Mniejsze wartości powodują wolniejsze uczenie, ale zwykle prowadzą do lepszej jakości modelu.
+
+W praktyce XGBoost jest szczególnie skuteczny w zadaniach złożonych, jednak wymaga starannego strojenia parametrów. Z tego powodu często stosuje się go jako model końcowy po analizie prostszych metod.
+
+## Krzywe ROC i AUC
+
+Krzywa ROC (Receiver Operating Characteristic) jest narzędziem służącym do oceny jakości klasyfikatorów binarnych. Przedstawia zależność pomiędzy czułością (True Positive Rate) a odsetkiem fałszywych alarmów (False Positive Rate) dla różnych progów decyzyjnych.
+
+Pole pod krzywą ROC, czyli AUC (Area Under Curve), stanowi jedną z najważniejszych miar jakości modelu. Wartość AUC bliska 1 oznacza bardzo dobrą jakość klasyfikacji, natomiast wartość bliska 0.5 oznacza działanie porównywalne z losowym zgadywaniem.
+
+Przykład generowania krzywej ROC:
+
+```python
+from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+
+y_prob = clf_rf.predict_proba(X_test)[:, 1]
+
+fpr, tpr, thresholds = roc_curve(y_test, y_prob)
+
+plt.plot(fpr, tpr)
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curve")
+plt.show()
+
+roc_auc_score(y_test, y_prob)
+```
+
+W praktyce analiza krzywej ROC pozwala dobrać optymalny próg decyzyjny. Domyślna wartość 0.5 nie zawsze jest najlepsza — w niektórych zadaniach warto stosować bardziej konserwatywne progi.
+
+## Walidacja krzyżowa 
+
+Walidacja krzyżowa jest techniką oceny modelu polegającą na wielokrotnym trenowaniu i testowaniu modelu na różnych podzbiorach danych. Najczęściej stosowaną metodą jest walidacja k-krotna, w której dane dzielone są na k części.
+
+Główną zaletą walidacji krzyżowej jest bardziej wiarygodna ocena jakości modelu. Zamiast jednorazowego podziału danych, model oceniany jest na wielu różnych zestawach treningowych i testowych.
+
+Przykład zastosowania walidacji krzyżowej:
+
+```python
+from sklearn.model_selection import cross_val_score
+
+scores = cross_val_score(
+    clf_rf,
+    X,
+    y,
+    cv=5,
+    scoring="roc_auc"
+)
+
+scores.mean()
+```
+
+W praktyce walidacja krzyżowa jest niezbędna podczas porównywania modeli. Pozwala uniknąć sytuacji, w której model przypadkowo dobrze dopasowuje się do jednego konkretnego podziału danych.
+
+## Tuning hiperparametrów
+
+Hiperparametry modelu mają ogromny wpływ na jego jakość. Domyślne wartości parametrów rzadko prowadzą do optymalnych wyników, dlatego konieczne jest ich dostrajanie.
+
+Najczęściej stosowaną metodą jest przeszukiwanie siatki parametrów (Grid Search) lub przeszukiwanie losowe (Random Search).
+
+Przykład strojenia parametrów lasu losowego:
+
+```python
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    "n_estimators": [100, 200, 300],
+    "max_depth": [5, 8, 12],
+    "min_samples_split": [2, 5]
+}
+
+grid_search = GridSearchCV(
+    estimator=clf_rf,
+    param_grid=param_grid,
+    cv=5,
+    scoring="roc_auc",
+    n_jobs=-1
+)
+
+grid_search.fit(X_train, y_train)
+
+grid_search.best_params_
+```
+
+W praktyce należy uważać na zbyt duże przestrzenie parametrów, ponieważ mogą one znacząco wydłużyć czas obliczeń. Dobrym podejściem jest rozpoczęcie od losowego przeszukiwania parametrów, a następnie dokładniejsze strojenie w wybranym zakresie.
+
+## XAI 
+
+Wyjaśnialna sztuczna inteligencja (Explainable AI — XAI) obejmuje metody pozwalające zrozumieć działanie modeli uczenia maszynowego. Wraz ze wzrostem złożoności modeli rośnie potrzeba ich interpretacji, szczególnie w zastosowaniach biznesowych i medycznych.
+
+Jedną z podstawowych metod interpretacji modeli jest analiza ważności cech. Pozwala ona określić, które zmienne mają największy wpływ na decyzje modelu.
+
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+feature_importances = clf_rf.feature_importances_
+
+importance_df = pd.DataFrame({
+    "feature": X.columns,
+    "importance": feature_importances
+}).sort_values(by="importance", ascending=False)
+
+importance_df.head(10)
+```
+
+W bardziej zaawansowanych analizach stosuje się metody takie jak SHAP (SHapley Additive exPlanations), które pozwalają analizować wpływ cech na pojedyncze predykcje.
+
+```python
+import shap
+
+explainer = shap.TreeExplainer(clf_rf)
+shap_values = explainer.shap_values(X_test)
+
+shap.summary_plot(shap_values, X_test)
+```
+
+W praktyce interpretacja modeli jest równie ważna jak ich skuteczność. Model o wysokiej dokładności, którego działania nie można wyjaśnić, może być trudny do zastosowania w środowisku produkcyjnym.
+
+## Podsumowanie
+
+W pracy z modelami klasyfikacyjnymi najważniejsze jest podejście iteracyjne. Rzadko zdarza się, aby pierwszy model był najlepszym rozwiązaniem — zwykle konieczne jest wielokrotne testowanie różnych metod, parametrów oraz sposobów przygotowania danych.
+
+Dobrym podejściem jest rozpoczęcie od prostych modeli interpretowalnych, takich jak drzewa decyzyjne, a następnie przechodzenie do bardziej zaawansowanych metod, takich jak lasy losowe i boosting gradientowy. Dopiero po uzyskaniu stabilnych wyników warto skupić się na strojeniach parametrów i interpretacji modeli.
+
+Największy wpływ na jakość modelu ma zwykle nie sam algorytm, lecz jakość danych wejściowych oraz odpowiednie przygotowanie cech. Z tego powodu w praktyce znaczna część czasu analityka poświęcana jest nie na budowę modeli, lecz na przygotowanie i analizę danych.
